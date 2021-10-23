@@ -49,10 +49,12 @@ Settings --> Data inputs --> HTTP Event Collector --> Global Settings (top right
 		}
 	}
 
-## TO DO - SSL/TLS and Logstash keystore steps
+## TO DO
+- generate SSL/TLS certificates
+- configure the Logstash truststore and keystore
 
 ## Considerations
 - use one token per index+sourcetype, and name/describe them accordingly
 - harden and firewall your assets; do not allow the entire world, or even the whole corporate network, to reach the ingest ports
-- certificates don't last forever; include the Splunk keys in your key management processes (and don't forget the Logstash keystore)
+- certificates don't last forever; include the Splunk keys in your key management processes (and don't forget the Logstash stores)
 - Logstash --> Kafka <-- Splunk: this setup is more durable and reduces data loss if the Splunk cluster goes down for some reason
