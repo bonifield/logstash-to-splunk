@@ -26,7 +26,7 @@ click **Review** --> **Submit**
 
 Settings --> Data inputs --> HTTP Event Collector --> Global Settings (top right)
 
-*this is where you will decide which source type this token is written to at index time*
+*this is where you will decide which source type this token is written to at index time (you cannot create a new source type from this menu, so have one ready before this step)*
 
 	# note HTTP Event Collector is where the token can be retrieved again if needed
 	All Tokens: Enabled
