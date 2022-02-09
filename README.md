@@ -1,7 +1,16 @@
 # Logstash to Splunk
 This is a writeup about sending Logstash data to Splunk using the HTTP Event Collector. Logstash provides an immense filtering capability which can be used to screen and reduce data before it hits the Splunk indexers. Additionally, Logstash can accept a vast array of inputs, and provides a middleware capability when translating Elastic Beats into Splunk logs. Using the Elastic Common Schema inside Splunk works perfectly well, as dotted fields (ex. source.ip) function without issue in the pipeline, and standard field renames (ex. turn periods into underscores, etc) can be applied either in Splunk or Logstash. Further decoupling of services, and increased data durability, can be achieved by using a Kafka cluster between Logstash and Splunk, but that is beyond the scope of this writeup.
 
-## 1. (Splunk) Create a HTTP Event Collector token
+# Considerations
+| Issue | Logstash | Splunk |
+| -- | -- | -- |
+| Transformations | LS permanently alters data before reaching Splunk | SP can update values dynamically due to search-time extraction |
+| Infrastructure | LS is not cluster-aware and requires orchestration management | SP can deploy policies directly to the ingest and indexing tiers |
+| Migration | Existing ES/ECE/LS infrastructure still works up until it reaches Splunk | SP cannot manage Logstash, Beats, or other non-Splunk agents directly* |
+
+\* = Splunk Deployment Servers can manage endpoint software in some circumstances
+
+## 1. (Splunk) Create a new HTTP Event Collector token
 
 [Official Documentation: Configure HTTP Event Collector on Splunk Enterprise](https://docs.splunk.com/Documentation/Splunk/8.2.2/Data/UsetheHTTPEventCollector)
 
@@ -14,7 +23,11 @@ click **Next**
 
 *this is where you will decide which index this token is written to upon being received*
 
-	Select Allowed Indexes --> click to "whitelist" indexes for this token (or create a new one via this panel, "logstash", for demo purposes)
+	Create a new index
+		Index Name: logstash
+		(leave rest defaults for this demo)
+		Save
+	Select Allowed Indexes --> click logstash to "whitelist" the index for this token
 
 click **Review** --> **Submit**
 
@@ -26,9 +39,9 @@ click **Review** --> **Submit**
 
 Settings --> Data inputs --> HTTP Event Collector --> Global Settings (top right)
 
-*this is where you will decide which source type this token is written to at index time (you cannot create a new source type from this panel, so have one ready before this step)*
+*these default source type settings will not affect which actual source type this token is written to, as we will change that in the following step (note you cannot create a new source type from this panel)*
 
-	# note HTTP Event Collector is where the token can be retrieved again if needed
+	# note HTTP Event Collector settings screen is where the token can be retrieved again if needed
 	All Tokens: Enabled
 	Default Source Type: Structured --> _json
 	Default Index: logstash
@@ -36,7 +49,26 @@ Settings --> Data inputs --> HTTP Event Collector --> Global Settings (top right
 	UNCHECK: Enable SSL (will be added later in the instructions)
 	HTTP Port Number: 8088 (default)
 
-## 3. (Logstash) Output Statement
+## 3. (Splunk) Create Source Type
+
+Settings --> Source types --> New Source Type (top right)
+
+*it is very important to set Indexed Extractions to "none", otherwise Splunk will display duplicated data as it double-parses the JSON*
+
+	Name: winlogbeat
+	Description: Windows endpoint data
+	Destination app: Search & Reporting
+	Category: Operating System
+	Indexed Extractions: none
+	# additional configurations should be made to set "@timestamp" as the document time field with the appropriate time zone, but that is not critical to this demo as both _time and @timestamp can be utilized for the same purpose
+
+## 4. (Splunk) Set Source Type for Token
+
+Settings --> Data inputs --> HTTP Event Collector --> Edit (on appropriate source type name)
+
+	Source Type: winlogbeat
+
+## 5. (Logstash) Output Statement
 
 *note the usage of the /services/collector/raw endpoint; the event (vs raw) endpoint is unreliable when sending POST data from Logstash*
 
