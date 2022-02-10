@@ -6,7 +6,7 @@ This is a writeup about sending Logstash data to Splunk using the HTTP Event Col
 | -- | -- | -- |
 | Transformations | LS permanently alters data before reaching Splunk | SP can update values dynamically due to search-time extraction |
 | Infrastructure | LS is not cluster-aware and requires orchestration management | SP can deploy policies directly to the ingest and indexing tiers |
-| Migration | Existing ES/ECE/LS infrastructure still works up until it reaches Splunk | SP cannot manage Logstash, Beats, or other non-Splunk agents directly* |
+| Migration | Existing Beats+LS infrastructure still works up until it reaches Splunk | SP cannot manage Logstash, Beats, or other non-Splunk agents directly* |
 
 \* = Splunk Deployment Servers can manage endpoint software in some circumstances
 
